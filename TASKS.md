@@ -1,0 +1,170 @@
+# TASKS.md - GitHub Actions Monitor MVP
+
+This document breaks down the MVP implementation into manageable tasks with clear dependencies and test-driven development approach.
+
+## Phase 1: MVP Core Features
+- ✅ Webhook endpoint with signature verification
+- ✅ Database storage for Repository, WorkflowRun, WorkflowJob
+- ✅ Basic LiveView dashboard displaying workflow runs
+- ✅ Real-time updates via PubSub + LiveView
+- ✅ Comprehensive test coverage
+
+## Task Breakdown
+
+### Foundation Tasks (No Dependencies)
+
+#### TASK-001: Database Schema Setup
+**Priority:** High | **Estimated Time:** 2-3 hours
+- [ ] Create Repository Ecto schema with fields: id, name, full_name, github_id, webhook_id, timestamps
+- [ ] Create WorkflowRun Ecto schema with fields: id, github_id, name, status, conclusion, workflow_id, head_branch, head_sha, run_number, started_at, completed_at, repository_id, timestamps
+- [ ] Create WorkflowJob Ecto schema with fields: id, github_id, name, status, conclusion, runner_name, runner_group_name, started_at, completed_at, workflow_run_id, timestamps
+- [ ] Add proper Ecto associations (Repository has_many WorkflowRuns, WorkflowRun has_many WorkflowJobs)
+- [ ] Create database migrations with indexes and constraints
+- [ ] Write comprehensive schema tests for validations and associations
+
+**Dependencies:** None
+**Test Coverage:** Schema validations, associations, database constraints
+
+#### TASK-002: Webhook Signature Verification Module
+**Priority:** High | **Estimated Time:** 1-2 hours
+- [ ] Create `CiRunners.Github.WebhookVerifier` module
+- [ ] Implement HMAC-SHA256 signature verification with constant-time comparison
+- [ ] Handle X-Hub-Signature-256 header parsing
+- [ ] Add configuration for webhook secret via environment variable
+- [ ] Write unit tests for signature verification (valid/invalid signatures, malformed headers)
+
+**Dependencies:** None
+**Test Coverage:** Valid signatures, invalid signatures, missing headers, malformed data
+
+### Core Webhook Processing (Depends on Foundation)
+
+#### TASK-003: Webhook Controller and Routes
+**Priority:** High | **Estimated Time:** 2-3 hours
+- [ ] Add POST /webhooks/github route
+- [ ] Create `CiRunnersWeb.WebhookController` with receive action
+- [ ] Implement request body reading and signature verification
+- [ ] Add proper error responses (401 for invalid signature, 400 for malformed payload)
+- [ ] Extract GitHub event type from X-GitHub-Event header
+- [ ] Route to appropriate event handler based on event type
+- [ ] Write controller tests with mock GitHub payloads
+
+**Dependencies:** TASK-002
+**Test Coverage:** Valid requests, invalid signatures, malformed payloads, unknown event types
+
+#### TASK-004: Workflow Event Processing Logic
+**Priority:** High | **Estimated Time:** 3-4 hours
+- [ ] Create `CiRunners.Github.WebhookHandler` module
+- [ ] Implement `handle_workflow_run/1` function to process workflow_run events
+- [ ] Implement `handle_workflow_job/1` function to process workflow_job events
+- [ ] Add repository creation/update logic with upsert behavior
+- [ ] Add workflow_run creation/update logic with proper status transitions
+- [ ] Add workflow_job creation/update logic with association to workflow_run
+- [ ] Write comprehensive unit tests with sample GitHub payloads
+
+**Dependencies:** TASK-001, TASK-003
+**Test Coverage:** New repositories, existing repositories, workflow status transitions, job associations
+
+### Real-time Infrastructure (Depends on Core Processing)
+
+#### TASK-005: PubSub Integration
+**Priority:** High | **Estimated Time:** 1-2 hours
+- [ ] Configure Phoenix PubSub in application.ex
+- [ ] Add PubSub broadcasting to webhook handler after database updates
+- [ ] Define message formats for workflow_run_updated and workflow_job_updated
+- [ ] Create helper module for PubSub topic management
+- [ ] Write tests for PubSub message broadcasting
+
+**Dependencies:** TASK-004
+**Test Coverage:** Message broadcasting, topic subscription, message formats
+
+### LiveView Implementation (Depends on Real-time Infrastructure)
+
+#### TASK-006: Basic Dashboard LiveView
+**Priority:** High | **Estimated Time:** 3-4 hours
+- [ ] Create `CiRunnersWeb.DashboardLive` LiveView module
+- [ ] Implement mount/3 with PubSub subscription to workflow updates
+- [ ] Load recent workflow runs with preloaded associations (repository, jobs)
+- [ ] Implement handle_info/2 for workflow_run_updated and workflow_job_updated messages
+- [ ] Create basic HTML template displaying workflow runs in chronological order
+- [ ] Add route for dashboard at "/"
+- [ ] Write LiveView tests for mount behavior and real-time updates
+
+**Dependencies:** TASK-005
+**Test Coverage:** LiveView mounting, PubSub message handling, state updates
+
+#### TASK-007: UI Components and Styling
+**Priority:** Medium | **Estimated Time:** 2-3 hours
+- [ ] Create WorkflowRunCard component displaying run name, number, status, branch
+- [ ] Create WorkflowJobItem component displaying job name, status, runner info
+- [ ] Create StatusBadge component with color-coded status indicators
+- [ ] Implement responsive TailwindCSS styling
+- [ ] Add loading states and connection status indicator
+- [ ] Add proper styling for different statuses (queued: gray, in_progress: blue, success: green, failure: red)
+- [ ] Write component tests for rendering and styling
+
+**Dependencies:** TASK-006
+**Test Coverage:** Component rendering, status styling, responsive behavior
+
+### Integration and End-to-End (Depends on All Previous)
+
+#### TASK-008: Integration Testing
+**Priority:** High | **Estimated Time:** 2-3 hours
+- [ ] Create end-to-end test for complete webhook-to-UI flow
+- [ ] Test real GitHub webhook payloads (workflow_run and workflow_job events)
+- [ ] Test multiple LiveView clients receiving simultaneous updates
+- [ ] Test database persistence and data integrity
+- [ ] Test error handling and recovery scenarios
+- [ ] Verify PubSub message delivery and LiveView updates
+
+**Dependencies:** TASK-007
+**Test Coverage:** Complete flow integration, multi-client updates, error scenarios
+
+#### TASK-009: Environment Configuration and Documentation
+**Priority:** Medium | **Estimated Time:** 1-2 hours
+- [ ] Add required environment variables to config (GITHUB_WEBHOOK_SECRET)
+- [ ] Update CLAUDE.md with webhook setup instructions
+- [ ] Add sample .env file with configuration examples
+- [ ] Document webhook endpoint URL for GitHub configuration
+- [ ] Add troubleshooting guide for common issues
+- [ ] Verify all tests pass and application starts successfully
+
+**Dependencies:** TASK-008
+**Test Coverage:** Configuration validation, startup verification
+
+## Task Dependencies Graph
+
+```
+TASK-001 (Database Schema)
+    ↓
+TASK-003 (Webhook Controller) ← TASK-002 (Signature Verification)
+    ↓
+TASK-004 (Event Processing)
+    ↓
+TASK-005 (PubSub Integration)
+    ↓
+TASK-006 (Dashboard LiveView)
+    ↓
+TASK-007 (UI Components)
+    ↓
+TASK-008 (Integration Testing)
+    ↓
+TASK-009 (Configuration & Docs)
+```
+
+## Definition of Done for MVP
+- [ ] All webhook endpoints accept and process GitHub events correctly
+- [ ] Database stores all three entity types with proper relationships
+- [ ] LiveView dashboard displays workflow runs in real-time
+- [ ] All tests pass (unit, integration, end-to-end)
+- [ ] Code is maintainable with clear module boundaries
+- [ ] SMEE webhook forwarding works end-to-end
+- [ ] Application can be started with `mix phx.server` and receives live GitHub events
+
+## Testing Strategy Summary
+- **Unit Tests:** Individual modules and functions
+- **Controller Tests:** HTTP requests and responses
+- **LiveView Tests:** Mount behavior and real-time updates
+- **Integration Tests:** Complete webhook-to-UI flow
+- **End-to-End Tests:** Real GitHub webhook processing
+
+Each task should be completed with full test coverage before moving to dependent tasks.
