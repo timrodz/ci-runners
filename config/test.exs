@@ -6,10 +6,10 @@ import Config
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :ci_runners, CiRunners.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "ci_runners_test#{System.get_env("MIX_TEST_PARTITION")}",
+  username: System.get_env("DB_USERNAME"),
+  password: System.get_env("DB_PASSWORD"),
+  hostname: System.get_env("DB_HOSTNAME"),
+  database: "#{System.get_env("DB_NAME")}_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
@@ -17,7 +17,7 @@ config :ci_runners, CiRunners.Repo,
 # you can enable the server option below.
 config :ci_runners, CiRunnersWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "efSUPHub5qzzAEmR7YLX6eafZw3UV+JSL3YSfzy0vsv96zWoKv6EYiloa5TKtb62",
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
   server: false
 
 # In test we don't send emails

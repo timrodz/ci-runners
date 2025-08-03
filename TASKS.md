@@ -13,17 +13,18 @@ This document breaks down the MVP implementation into manageable tasks with clea
 
 ### Foundation Tasks (No Dependencies)
 
-#### TASK-001: Database Schema Setup
+#### TASK-001: Database Schema Setup ✅ COMPLETED
 **Priority:** High | **Estimated Time:** 2-3 hours
-- [ ] Create Repository Ecto schema with fields: id, name, full_name, github_id, webhook_id, timestamps
-- [ ] Create WorkflowRun Ecto schema with fields: id, github_id, name, status, conclusion, workflow_id, head_branch, head_sha, run_number, started_at, completed_at, repository_id, timestamps
-- [ ] Create WorkflowJob Ecto schema with fields: id, github_id, name, status, conclusion, runner_name, runner_group_name, started_at, completed_at, workflow_run_id, timestamps
-- [ ] Add proper Ecto associations (Repository has_many WorkflowRuns, WorkflowRun has_many WorkflowJobs)
-- [ ] Create database migrations with indexes and constraints
-- [ ] Write comprehensive schema tests for validations and associations
+- [x] Create Repository Ecto schema with fields: id, owner, name, github_id, timestamps (updated to use owner/name instead of full_name)
+- [x] Create WorkflowRun Ecto schema with fields: id, github_id, name, status, conclusion, workflow_id, head_branch, head_sha, run_number, started_at, completed_at, repository_id, timestamps
+- [x] Create WorkflowJob Ecto schema with fields: id, github_id, name, status, conclusion, runner_name, runner_group_name, started_at, completed_at, workflow_run_id, timestamps
+- [x] Add proper Ecto associations (Repository has_many WorkflowRuns, WorkflowRun belongs_to Repository and has_many WorkflowJobs, WorkflowJob belongs_to WorkflowRun)
+- [x] Create database migrations with indexes, unique constraints, and foreign key constraints
+- [x] Write comprehensive schema tests for validations and associations (31 tests passing)
 
 **Dependencies:** None
-**Test Coverage:** Schema validations, associations, database constraints
+**Test Coverage:** Schema validations, associations, database constraints, unique constraints
+**Completed:** Repository schema uses owner/name structure (e.g. "timrodz/racing-leaderboards"), all schemas have proper associations, comprehensive test coverage with edge cases
 
 #### TASK-002: Webhook Signature Verification Module
 **Priority:** High | **Estimated Time:** 1-2 hours
