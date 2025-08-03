@@ -114,7 +114,7 @@ This is a Phoenix 1.8 web application implementing a GitHub Actions monitoring s
 ## Environment Configuration
 
 Required environment variables:
-- `GITHUB_WEBHOOK_SECRET` - Secret for verifying GitHub webhook signatures
+- `GH_REPO_SECRET` - Secret for verifying GitHub webhook signatures (configured in all environment configs to be loaded via Application.get_env/2)
 
 ## Development Approach
 

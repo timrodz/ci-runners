@@ -85,3 +85,6 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Configure GitHub webhook secret from environment variable
+config :ci_runners, :github_webhook_secret, System.get_env("GH_REPO_SECRET")

@@ -55,6 +55,9 @@ if config_env() == :prod do
 
   config :ci_runners, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
+  # Configure GitHub webhook secret
+  config :ci_runners, :github_webhook_secret, System.get_env("GH_REPO_SECRET")
+
   config :ci_runners, CiRunnersWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [

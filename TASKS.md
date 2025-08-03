@@ -26,16 +26,17 @@ This document breaks down the MVP implementation into manageable tasks with clea
 **Test Coverage:** Schema validations, associations, database constraints, unique constraints
 **Completed:** Repository schema uses owner/name structure (e.g. "timrodz/racing-leaderboards"), all schemas have proper associations, comprehensive test coverage with edge cases
 
-#### TASK-002: Webhook Signature Verification Module
+#### TASK-002: Webhook Signature Verification Module ✅ COMPLETED
 **Priority:** High | **Estimated Time:** 1-2 hours
-- [ ] Create `CiRunners.Github.WebhookVerifier` module
-- [ ] Implement HMAC-SHA256 signature verification with constant-time comparison
-- [ ] Handle X-Hub-Signature-256 header parsing
-- [ ] Add configuration for webhook secret via environment variable
-- [ ] Write unit tests for signature verification (valid/invalid signatures, malformed headers)
+- [x] Create `CiRunners.Github.WebhookVerifier` module
+- [x] Implement HMAC-SHA256 signature verification with constant-time comparison
+- [x] Handle X-Hub-Signature-256 header parsing
+- [x] Add configuration for webhook secret via environment variable
+- [x] Write unit tests for signature verification (valid/invalid signatures, malformed headers)
 
 **Dependencies:** None
 **Test Coverage:** Valid signatures, invalid signatures, missing headers, malformed data
+**Completed:** WebhookVerifier module with HMAC-SHA256 verification, constant-time comparison to prevent timing attacks, X-Hub-Signature-256 header parsing, GH_REPO_SECRET environment variable support, comprehensive test coverage (28 tests passing)
 
 ### Core Webhook Processing (Depends on Foundation)
 
