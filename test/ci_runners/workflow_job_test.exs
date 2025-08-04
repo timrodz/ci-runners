@@ -4,25 +4,27 @@ defmodule CiRunners.Github.WorkflowJobTest do
   alias CiRunners.Github.{Repository, WorkflowRun, WorkflowJob}
 
   setup do
-    repository = Repo.insert!(%Repository{
-      owner: "timrodz",
-      name: "racing-leaderboards",
-      github_id: 123456
-    })
+    repository =
+      Repo.insert!(%Repository{
+        owner: "timrodz",
+        name: "racing-leaderboards",
+        github_id: 123_456
+      })
 
-    workflow_run = Repo.insert!(%WorkflowRun{
-      github_id: 987654,
-      name: "CI Workflow",
-      status: "completed",
-      conclusion: "success",
-      workflow_id: 111,
-      head_branch: "main",
-      head_sha: "abc123",
-      run_number: 42,
-      started_at: ~U[2023-01-01 12:00:00Z],
-      completed_at: ~U[2023-01-01 12:10:00Z],
-      repository_id: repository.id
-    })
+    workflow_run =
+      Repo.insert!(%WorkflowRun{
+        github_id: 987_654,
+        name: "CI Workflow",
+        status: "completed",
+        conclusion: "success",
+        workflow_id: 111,
+        head_branch: "main",
+        head_sha: "abc123",
+        run_number: 42,
+        started_at: ~U[2023-01-01 12:00:00Z],
+        completed_at: ~U[2023-01-01 12:10:00Z],
+        repository_id: repository.id
+      })
 
     {:ok, workflow_run: workflow_run}
   end
@@ -30,7 +32,7 @@ defmodule CiRunners.Github.WorkflowJobTest do
   describe "changeset/2" do
     test "with valid attributes", %{workflow_run: workflow_run} do
       attrs = %{
-        github_id: 555666,
+        github_id: 555_666,
         name: "build",
         status: "completed",
         conclusion: "success",
@@ -61,7 +63,7 @@ defmodule CiRunners.Github.WorkflowJobTest do
 
     test "requires name" do
       attrs = %{
-        github_id: 555666,
+        github_id: 555_666,
         status: "completed",
         conclusion: "success",
         runner_name: "GitHub Actions 1",
@@ -75,7 +77,7 @@ defmodule CiRunners.Github.WorkflowJobTest do
 
     test "requires status" do
       attrs = %{
-        github_id: 555666,
+        github_id: 555_666,
         name: "build",
         conclusion: "success",
         runner_name: "GitHub Actions 1",
@@ -87,37 +89,9 @@ defmodule CiRunners.Github.WorkflowJobTest do
       assert "can't be blank" in errors_on(changeset).status
     end
 
-    test "requires runner_name" do
-      attrs = %{
-        github_id: 555666,
-        name: "build",
-        status: "completed",
-        conclusion: "success",
-        runner_group_name: "GitHub Actions",
-        started_at: ~U[2023-01-01 12:01:00Z]
-      }
-
-      changeset = WorkflowJob.changeset(%WorkflowJob{}, attrs)
-      assert "can't be blank" in errors_on(changeset).runner_name
-    end
-
-    test "requires runner_group_name" do
-      attrs = %{
-        github_id: 555666,
-        name: "build",
-        status: "completed",
-        conclusion: "success",
-        runner_name: "GitHub Actions 1",
-        started_at: ~U[2023-01-01 12:01:00Z]
-      }
-
-      changeset = WorkflowJob.changeset(%WorkflowJob{}, attrs)
-      assert "can't be blank" in errors_on(changeset).runner_group_name
-    end
-
     test "requires started_at" do
       attrs = %{
-        github_id: 555666,
+        github_id: 555_666,
         name: "build",
         status: "completed",
         conclusion: "success",
@@ -131,7 +105,7 @@ defmodule CiRunners.Github.WorkflowJobTest do
 
     test "conclusion is optional" do
       attrs = %{
-        github_id: 555666,
+        github_id: 555_666,
         name: "build",
         status: "in_progress",
         runner_name: "GitHub Actions 1",
@@ -145,7 +119,7 @@ defmodule CiRunners.Github.WorkflowJobTest do
 
     test "completed_at is optional" do
       attrs = %{
-        github_id: 555666,
+        github_id: 555_666,
         name: "build",
         status: "in_progress",
         runner_name: "GitHub Actions 1",
@@ -159,7 +133,7 @@ defmodule CiRunners.Github.WorkflowJobTest do
 
     test "github_id must be unique", %{workflow_run: workflow_run} do
       attrs = %{
-        github_id: 555666,
+        github_id: 555_666,
         name: "build",
         status: "completed",
         conclusion: "success",

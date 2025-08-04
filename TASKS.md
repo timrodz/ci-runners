@@ -54,18 +54,19 @@ This document breaks down the MVP implementation into manageable tasks with clea
 **Test Coverage:** Valid requests, invalid signatures, malformed payloads, unknown event types
 **Completed:** Webhook controller at `/api/webhooks/github` with HMAC-SHA256 signature verification, event type routing for workflow_run/workflow_job events, comprehensive error handling (401/400/500), complete test coverage (10 tests) with mock GitHub payloads, object-to-string payload transformation in WebhookVerifier
 
-#### TASK-004: Workflow Event Processing Logic
+#### TASK-004: Workflow Event Processing Logic ✅ COMPLETED
 **Priority:** High | **Estimated Time:** 3-4 hours
-- [ ] Create `CiRunners.Github.WebhookHandler` module
-- [ ] Implement `handle_workflow_run/1` function to process workflow_run events
-- [ ] Implement `handle_workflow_job/1` function to process workflow_job events
-- [ ] Add repository creation/update logic with upsert behavior
-- [ ] Add workflow_run creation/update logic with proper status transitions
-- [ ] Add workflow_job creation/update logic with association to workflow_run
-- [ ] Write comprehensive unit tests with sample GitHub payloads
+- [x] Create `CiRunners.Github.WebhookHandler` module
+- [x] Implement `handle_workflow_run/1` function to process workflow_run events
+- [x] Implement `handle_workflow_job/1` function to process workflow_job events
+- [x] Add repository creation/update logic with upsert behavior
+- [x] Add workflow_run creation/update logic with proper status transitions
+- [x] Add workflow_job creation/update logic with association to workflow_run
+- [x] Write comprehensive unit tests with sample GitHub payloads
 
 **Dependencies:** TASK-001, TASK-003
 **Test Coverage:** New repositories, existing repositories, workflow status transitions, job associations
+**Completed:** WebhookHandler module with comprehensive event processing, repository/workflow_run/workflow_job upsert logic, robust error handling and validation, updated database schema to use bigint for GitHub IDs, complete test coverage (23 tests) including edge cases and error scenarios
 
 ### Real-time Infrastructure (Depends on Core Processing)
 

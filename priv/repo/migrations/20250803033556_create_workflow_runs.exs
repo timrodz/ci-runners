@@ -3,11 +3,11 @@ defmodule CiRunners.Repo.Migrations.CreateWorkflowRuns do
 
   def change do
     create table(:workflow_runs) do
-      add :github_id, :integer, null: false
+      add :github_id, :bigint, null: false
       add :name, :string, null: false
       add :status, :string, null: false
       add :conclusion, :string
-      add :workflow_id, :integer, null: false
+      add :workflow_id, :bigint, null: false
       add :head_branch, :string, null: false
       add :head_sha, :string, null: false
       add :run_number, :integer, null: false

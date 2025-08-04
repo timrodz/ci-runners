@@ -2,9 +2,11 @@ defmodule CiRunnersWeb.WebhookController do
   use CiRunnersWeb, :controller
   require Logger
 
+  @event_header "x-github-event"
+
   @doc """
   Receives GitHub webhook events and processes them.
-  
+
   Note: This function is called by GhWebhookPlug after signature verification,
   so we can assume the request is authenticated and the payload is valid JSON.
   """
@@ -21,6 +23,11 @@ defmodule CiRunnersWeb.WebhookController do
             Logger.info("Ignored unsupported event: #{event_type}")
             # Response is handled by the plug, just return the conn
             conn
+
+          {:error, reason} ->
+            Logger.error("Failed to process #{event_type} event: #{inspect(reason)}")
+            # Response is handled by the plug, just return the conn
+            conn
         end
 
       {:error, :missing_event_type} ->
@@ -31,27 +38,23 @@ defmodule CiRunnersWeb.WebhookController do
   end
 
   defp get_event_type_header(conn) do
-    case Plug.Conn.get_req_header(conn, "x-github-event") do
+    case Plug.Conn.get_req_header(conn, @event_header) do
       [event_type] -> {:ok, event_type}
-      [] -> {:error, :missing_event_type}
       _ -> {:error, :missing_event_type}
     end
   end
 
   defp handle_event("workflow_run", payload) do
-    # TODO: Call WebhookHandler.handle_workflow_run/1 when implemented
     Logger.info("Received workflow_run event: #{inspect(payload["action"])}")
-    :ok
+    CiRunners.Github.WebhookHandler.handle_workflow_run(payload)
   end
 
   defp handle_event("workflow_job", payload) do
-    # TODO: Call WebhookHandler.handle_workflow_job/1 when implemented
     Logger.info("Received workflow_job event: #{inspect(payload["action"])}")
-    :ok
+    CiRunners.Github.WebhookHandler.handle_workflow_job(payload)
   end
 
-  defp handle_event(event_type, _payload) do
-    Logger.info("Unsupported event type: #{event_type}")
+  defp handle_event(_event_type, _payload) do
     {:error, :unsupported_event}
   end
 end

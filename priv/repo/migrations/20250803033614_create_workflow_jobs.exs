@@ -3,7 +3,7 @@ defmodule CiRunners.Repo.Migrations.CreateWorkflowJobs do
 
   def change do
     create table(:workflow_jobs) do
-      add :github_id, :integer, null: false
+      add :github_id, :bigint, null: false
       add :name, :string, null: false
       add :status, :string, null: false
       add :conclusion, :string
