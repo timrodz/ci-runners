@@ -8,7 +8,7 @@ defmodule CiRunners.Github.WebhookHandler do
   GitHub sends events in the following order: `check_run`, `workflow_job`, `workflow_run`.
   """
 
-  alias CiRunners.{Repositories, WorkflowRuns, WorkflowJobs}
+  alias CiRunners.{Repositories, WorkflowRuns, WorkflowJobs, PubSub}
 
   @doc """
   Handles a workflow_job webhook event.
@@ -25,8 +25,10 @@ defmodule CiRunners.Github.WebhookHandler do
          {:ok, workflow_job_data} <- WorkflowJobs.extract_from_payload(payload),
          {:ok, workflow_run} <-
            WorkflowRuns.get_or_create_from_job_webhook(workflow_job_data, repository.id),
-         {:ok, _workflow_job} <-
+         {:ok, workflow_job} <-
            WorkflowJobs.upsert_from_webhook(workflow_job_data, workflow_run.id) do
+      # Broadcast workflow job update
+      PubSub.broadcast_workflow_job_update(workflow_job, workflow_job.status)
       :ok
     else
       error ->
@@ -49,8 +51,10 @@ defmodule CiRunners.Github.WebhookHandler do
   """
   def handle_workflow_run(payload) when is_map(payload) do
     with {:ok, repository} <- Repositories.upsert_from_webhook(payload["repository"]),
-         {:ok, _workflow_run} <-
+         {:ok, workflow_run} <-
            WorkflowRuns.upsert_from_webhook(payload["workflow_run"], repository.id) do
+      # Broadcast workflow run update
+      PubSub.broadcast_workflow_run_update(workflow_run, workflow_run.status)
       :ok
     else
       error ->
