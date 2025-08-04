@@ -19,26 +19,29 @@ defmodule CiRunnersWeb.GhWebhookPlug do
              {:ok, payload} <- get_cached_body(conn),
              {:ok, parsed_payload} <- parse_json_payload(conn),
              true <- verify_signature(payload, secret, signature) do
-          
           {module, function} = get_config(options, :action)
           apply(module, function, [conn, parsed_payload])
           conn |> send_resp(200, "OK") |> halt()
         else
           {:error, :missing_signature} ->
-            conn |> send_resp(400, Jason.encode!(%{error: "Missing X-Hub-Signature-256 header"})) |> halt()
-          
+            conn
+            |> send_resp(400, Jason.encode!(%{error: "Missing X-Hub-Signature-256 header"}))
+            |> halt()
+
           {:error, :missing_secret} ->
-            conn |> send_resp(500, Jason.encode!(%{error: "Webhook secret not configured"})) |> halt()
-          
+            conn
+            |> send_resp(500, Jason.encode!(%{error: "Webhook secret not configured"}))
+            |> halt()
+
           {:error, :missing_body} ->
             conn |> send_resp(400, Jason.encode!(%{error: "Missing request body"})) |> halt()
-          
+
           {:error, :invalid_json} ->
             conn |> send_resp(400, Jason.encode!(%{error: "Invalid JSON payload"})) |> halt()
-          
+
           false ->
             conn |> send_resp(401, Jason.encode!(%{error: "Invalid signature"})) |> halt()
-          
+
           error ->
             Logger.error("Unexpected webhook error: #{inspect(error)}")
             conn |> send_resp(500, Jason.encode!(%{error: "Internal server error"})) |> halt()
@@ -93,7 +96,7 @@ defmodule CiRunnersWeb.GhWebhookPlug do
   defp get_config(key) do
     case Application.get_env(:ci_runners, github_webhook_secret_key(key)) do
       nil ->
-        Logger.warning("GhWebhookPlug config key #{inspect(key)} is not configured.")
+        Logger.error("Github Webhook Secret key #{inspect(key)} is not configured.")
         nil
 
       val ->

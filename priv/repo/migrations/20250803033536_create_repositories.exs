@@ -5,7 +5,7 @@ defmodule CiRunners.Repo.Migrations.CreateRepositories do
     create table(:repositories) do
       add :owner, :string, null: false
       add :name, :string, null: false
-      add :github_id, :integer, null: false
+      add :github_id, :bigint, null: false
 
       timestamps(type: :utc_datetime)
     end

@@ -23,8 +23,29 @@ defmodule CiRunners.Github.WorkflowRun do
   @doc false
   def changeset(workflow_run, attrs) do
     workflow_run
-    |> cast(attrs, [:github_id, :name, :status, :conclusion, :workflow_id, :head_branch, :head_sha, :run_number, :started_at, :completed_at, :repository_id])
-    |> validate_required([:github_id, :name, :status, :workflow_id, :head_branch, :head_sha, :run_number, :started_at])
+    |> cast(attrs, [
+      :github_id,
+      :name,
+      :status,
+      :conclusion,
+      :workflow_id,
+      :head_branch,
+      :head_sha,
+      :run_number,
+      :started_at,
+      :completed_at,
+      :repository_id
+    ])
+    |> validate_required([
+      :github_id,
+      :name,
+      :status,
+      :workflow_id,
+      :head_branch,
+      :head_sha,
+      :run_number,
+      :started_at
+    ])
     |> unique_constraint(:github_id)
     |> foreign_key_constraint(:repository_id)
   end

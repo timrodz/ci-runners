@@ -8,7 +8,7 @@ defmodule CiRunners.Github.RepositoryTest do
       attrs = %{
         owner: "timrodz",
         name: "racing-leaderboards",
-        github_id: 123456
+        github_id: 123_456
       }
 
       changeset = Repository.changeset(%Repository{}, attrs)
@@ -16,13 +16,13 @@ defmodule CiRunners.Github.RepositoryTest do
     end
 
     test "requires owner" do
-      attrs = %{name: "racing-leaderboards", github_id: 123456}
+      attrs = %{name: "racing-leaderboards", github_id: 123_456}
       changeset = Repository.changeset(%Repository{}, attrs)
       assert "can't be blank" in errors_on(changeset).owner
     end
 
     test "requires name" do
-      attrs = %{owner: "timrodz", github_id: 123456}
+      attrs = %{owner: "timrodz", github_id: 123_456}
       changeset = Repository.changeset(%Repository{}, attrs)
       assert "can't be blank" in errors_on(changeset).name
     end
@@ -37,7 +37,7 @@ defmodule CiRunners.Github.RepositoryTest do
       attrs = %{
         owner: "timrodz",
         name: "racing-leaderboards",
-        github_id: 123456
+        github_id: 123_456
       }
 
       # Insert first repository
