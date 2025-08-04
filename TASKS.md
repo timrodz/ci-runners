@@ -70,16 +70,17 @@ This document breaks down the MVP implementation into manageable tasks with clea
 
 ### Real-time Infrastructure (Depends on Core Processing)
 
-#### TASK-005: PubSub Integration
+#### TASK-005: PubSub Integration ✅ COMPLETED
 **Priority:** High | **Estimated Time:** 1-2 hours
-- [ ] Configure Phoenix PubSub in application.ex
-- [ ] Add PubSub broadcasting to webhook handler after database updates
-- [ ] Define message formats for workflow_run_updated and workflow_job_updated
-- [ ] Create helper module for PubSub topic management
-- [ ] Write tests for PubSub message broadcasting
+- [x] Configure Phoenix PubSub in application.ex
+- [x] Add PubSub broadcasting to webhook handler after database updates
+- [x] Define message formats for workflow_run_updated and workflow_job_updated
+- [x] Create helper module for PubSub topic management
+- [x] Write tests for PubSub message broadcasting
 
 **Dependencies:** TASK-004
 **Test Coverage:** Message broadcasting, topic subscription, message formats
+**Completed:** Phoenix PubSub integration with CiRunners.PubSub helper module, automated broadcasting from context modules (WorkflowRuns/WorkflowJobs), standardized message formats for workflow_run_updated and workflow_job_updated events, comprehensive test coverage (8 tests) including subscription/unsubscription and integration tests
 
 ### LiveView Implementation (Depends on Real-time Infrastructure)
 
