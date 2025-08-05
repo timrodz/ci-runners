@@ -1,0 +1,176 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-8">
+    <div class="mt-10 flex justify-between items-center">
+      <h1 class="text-3xl font-bold text-primary">GitHub Actions Dashboard</h1>
+      <Layouts.theme_toggle />
+    </div>
+    <p class="mt-2 text-base-content">Real-time monitoring of workflow runs and jobs</p>
+  </div>
+
+  <div class="space-y-6" phx-update="stream" id="workflow-runs">
+    <%= if length(@streams.workflow_runs.inserts) == 0 do %>
+      <div id="empty-state" class="text-center py-12">
+        <div class="mx-auto h-12 w-12 text-gray-400">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            >
+            </path>
+          </svg>
+        </div>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No workflow runs</h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Get started by triggering a workflow in your GitHub repository.
+        </p>
+      </div>
+    <% else %>
+      <%= for {dom_id, workflow_run} <- @streams.workflow_runs do %>
+        <div id={dom_id} class="bg-white shadow rounded-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <h3 class="text-lg font-medium text-gray-900">{workflow_run.name}</h3>
+                <span class={"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{status_class(workflow_run.status, workflow_run.conclusion)}"}>
+                  <%= if workflow_run.status == "completed" and workflow_run.conclusion do %>
+                    {format_conclusion(workflow_run.conclusion)}
+                  <% else %>
+                    {format_status(workflow_run.status)}
+                  <% end %>
+                </span>
+              </div>
+              <div class="text-sm text-gray-500">
+                #{workflow_run.run_number}
+              </div>
+            </div>
+
+            <div id="run-overview" class="mt-2 flex items-center space-x-6 text-sm text-gray-500">
+              <%= if Ecto.assoc_loaded?(workflow_run.repository) do %>
+                <div class="flex items-center">
+                  <svg
+                    class="mr-1.5 h-4 w-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    >
+                    </path>
+                  </svg>
+                  {workflow_run.repository.owner}/{workflow_run.repository.name}
+                </div>
+              <% end %>
+
+              <div class="flex items-center">
+                <svg
+                  class="mr-1.5 h-4 w-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  >
+                  </path>
+                </svg>
+                {time_ago(workflow_run.started_at)}
+              </div>
+
+              <div class="flex items-center">
+                <svg
+                  class="mr-1.5 h-4 w-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                  >
+                  </path>
+                </svg>
+                {workflow_run.head_branch}
+              </div>
+
+              <div class="flex items-center">
+                <svg
+                  class="mr-1.5 h-4 w-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M7 20l4-16m2 16l4-16M6 9l14 0"
+                  >
+                  </path>
+                </svg>
+                {String.slice(workflow_run.head_sha, 0, 7)}
+              </div>
+            </div>
+          </div>
+
+          <% jobs_for_run = Map.get(@jobs_by_run, workflow_run.id, []) %>
+          <%= if jobs_for_run != [] do %>
+            <div class="px-6 py-4">
+              <h4 class="text-sm font-medium text-gray-900 mb-3">Jobs</h4>
+              <div class="space-y-2">
+                <%= for job <- Enum.sort_by(jobs_for_run, & &1.started_at, {:desc, DateTime}) do %>
+                  <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
+                    <div class="flex items-center space-x-3">
+                      <span class="text-sm font-medium text-gray-900">{job.name}</span>
+                      <span class={"inline-flex items-center px-2 py-0.5 rounded text-xs font-medium #{status_class(job.status, job.conclusion)}"}>
+                        <%= if job.status == "completed" and job.conclusion do %>
+                          {format_conclusion(job.conclusion)}
+                        <% else %>
+                          {format_status(job.status)}
+                        <% end %>
+                      </span>
+                    </div>
+
+                    <div class="flex items-center space-x-4 text-xs text-gray-500">
+                      <%= if job.runner_name do %>
+                        <span class="flex items-center">
+                          <svg
+                            class="mr-1 h-3 w-3 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                            >
+                            </path>
+                          </svg>
+                          {job.runner_name}
+                        </span>
+                      <% end %>
+
+                      <span>{time_ago(job.started_at)}</span>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

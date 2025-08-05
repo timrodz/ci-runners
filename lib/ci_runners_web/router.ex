@@ -17,7 +17,7 @@ defmodule CiRunnersWeb.Router do
   scope "/", CiRunnersWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", DashboardLive, :index
   end
 
   # GitHub webhook is handled by GhWebhookPlug in endpoint.ex

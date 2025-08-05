@@ -70,8 +70,11 @@ defmodule CiRunnersWeb.GhWebhookPlug do
 
   defp get_cached_body(conn) do
     case CiRunnersWeb.CacheBodyReader.read_cached_body(conn) do
-      {:ok, payload, _conn} -> {:ok, payload}
-      {:error, _, _conn} -> {:error, :missing_body}
+      {:ok, payload, _conn} ->
+        {:ok, payload}
+
+      {:error, _, _conn} ->
+        {:error, :missing_body}
     end
   end
 
