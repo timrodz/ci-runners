@@ -6,6 +6,7 @@ defmodule CiRunners.PubSub do
   to subscribers, enabling real-time dashboard updates.
   """
 
+  require Logger
   alias Phoenix.PubSub
 
   @pubsub_name CiRunners.PubSub
@@ -22,12 +23,14 @@ defmodule CiRunners.PubSub do
       :ok
   """
   def broadcast_workflow_run_update(workflow_run, event_type) do
-    message = %{
-      type: :workflow_run_updated,
-      event_type: event_type,
-      workflow_run: workflow_run
-    }
+    message =
+      %{
+        type: :workflow_run_updated,
+        event_type: event_type,
+        workflow_run: workflow_run
+      }
 
+    Logger.info("Broadcasting workflow run update: #{inspect(workflow_run.id)} - #{event_type}")
     PubSub.broadcast(@pubsub_name, workflow_runs_topic(), message)
   end
 
@@ -43,12 +46,14 @@ defmodule CiRunners.PubSub do
       :ok
   """
   def broadcast_workflow_job_update(workflow_job, event_type) do
-    message = %{
-      type: :workflow_job_updated,
-      event_type: event_type,
-      workflow_job: workflow_job
-    }
+    message =
+      %{
+        type: :workflow_job_updated,
+        event_type: event_type,
+        workflow_job: workflow_job
+      }
 
+    Logger.info("Broadcasting workflow job update: #{inspect(workflow_job.id)} - #{event_type}")
     PubSub.broadcast(@pubsub_name, workflow_jobs_topic(), message)
   end
 
