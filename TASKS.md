@@ -84,18 +84,19 @@ This document breaks down the MVP implementation into manageable tasks with clea
 
 ### LiveView Implementation (Depends on Real-time Infrastructure)
 
-#### TASK-006: Basic Dashboard LiveView
+#### TASK-006: Basic Dashboard LiveView ✅ COMPLETED
 **Priority:** High | **Estimated Time:** 3-4 hours
-- [ ] Create `CiRunnersWeb.DashboardLive` LiveView module
-- [ ] Implement mount/3 with PubSub subscription to workflow updates
-- [ ] Load recent workflow runs with preloaded associations (repository, jobs)
-- [ ] Implement handle_info/2 for workflow_run_updated and workflow_job_updated messages
-- [ ] Create basic HTML template displaying workflow runs in chronological order
-- [ ] Add route for dashboard at "/"
-- [ ] Write LiveView tests for mount behavior and real-time updates
+- [x] Create `CiRunnersWeb.DashboardLive` LiveView module
+- [x] Implement mount/3 with PubSub subscription to workflow updates
+- [x] Load recent workflow runs with preloaded associations (repository, jobs)
+- [x] Implement handle_info/2 for workflow_run_updated and workflow_job_updated messages
+- [x] Create basic HTML template displaying workflow runs in chronological order
+- [x] Add route for dashboard at "/"
+- [x] Write LiveView tests for mount behavior and real-time updates
 
 **Dependencies:** TASK-005
 **Test Coverage:** LiveView mounting, PubSub message handling, state updates
+**Completed:** DashboardLive module with comprehensive real-time functionality, PubSub subscription for workflow updates, preloaded associations for efficient data loading, responsive HTML template with status indicators, complete test coverage for mount behavior and live updates
 
 #### TASK-007: UI Components and Styling
 **Priority:** Medium | **Estimated Time:** 2-3 hours
@@ -157,11 +158,11 @@ TASK-009 (Configuration & Docs)
 ```
 
 ## Definition of Done for MVP
-- [ ] All webhook endpoints accept and process GitHub events correctly
-- [ ] Database stores all three entity types with proper relationships
-- [ ] LiveView dashboard displays workflow runs in real-time
+- [x] All webhook endpoints accept and process GitHub events correctly
+- [x] Database stores all three entity types with proper relationships
+- [x] LiveView dashboard displays workflow runs in real-time
 - [ ] All tests pass (unit, integration, end-to-end)
-- [ ] Code is maintainable with clear module boundaries
+- [x] Code is maintainable with clear module boundaries
 - [ ] SMEE webhook forwarding works end-to-end
 - [ ] Application can be started with `mix phx.server` and receives live GitHub events
 

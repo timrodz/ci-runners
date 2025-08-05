@@ -6,6 +6,9 @@ defmodule CiRunners.WorkflowRuns do
   based on GitHub webhook data.
   """
 
+  import Ecto.Query
+
+  alias CiRunners.Github.WorkflowJob
   alias CiRunners.Repo
   alias CiRunners.Github.WorkflowRun
 
@@ -71,6 +74,101 @@ defmodule CiRunners.WorkflowRuns do
   def get_by_github_id_direct(github_id) do
     Repo.get_by(WorkflowRun, github_id: github_id)
   end
+
+  @doc """
+  Lists recent workflow runs with preloaded associations.
+
+  ## Parameters
+  - limit: Maximum number of workflow runs to return (default: 50)
+
+  ## Returns
+  - List of %WorkflowRun{} with preloaded repository and jobs
+  """
+  def list_recent(limit \\ 50) do
+    WorkflowRun
+    |> order_by([wr], desc: wr.started_at)
+    |> limit(^limit)
+    |> preload([:repository, :workflow_jobs])
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists recent workflow runs without jobs preloaded.
+
+  ## Parameters
+  - limit: Maximum number of workflow runs to return (default: 50)
+
+  ## Returns
+  - List of %WorkflowRun{} with preloaded repository only
+  """
+  def list_recent_runs_only(limit \\ 50) do
+    WorkflowRun
+    |> order_by([wr], desc: wr.started_at)
+    |> limit(^limit)
+    |> preload([:repository])
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists workflow jobs for the given workflow run IDs, grouped by run ID.
+
+  ## Parameters
+  - run_ids: List of workflow run IDs to fetch jobs for
+
+  ## Returns
+  - Map with run_id as key and list of jobs as value
+  """
+  def list_jobs_grouped_by_run(run_ids) when is_list(run_ids) do
+    # Optimize query by adding select and ensuring efficient ordering
+    jobs =
+      WorkflowJob
+      |> where([wj], wj.workflow_run_id in ^run_ids)
+      |> order_by([wj], asc: wj.workflow_run_id, desc: wj.started_at)
+      |> Repo.all()
+
+    # Group jobs by workflow_run_id efficiently
+    Enum.group_by(jobs, & &1.workflow_run_id)
+  end
+
+  def list_jobs_grouped_by_run([]), do: %{}
+
+  @doc """
+  Gets a workflow run by ID with all jobs preloaded.
+
+  ## Parameters
+  - id: The database ID of the workflow run
+
+  ## Returns
+  - %WorkflowRun{} with preloaded jobs if found
+  - nil if not found
+  """
+  def get_workflow_run_with_jobs(id) when is_integer(id) do
+    WorkflowRun
+    |> where([wr], wr.id == ^id)
+    |> preload([:repository, :workflow_jobs])
+    |> Repo.one()
+  end
+
+  def get_workflow_run_with_jobs(_), do: nil
+
+  @doc """
+  Gets a workflow run by GitHub ID with repository preloaded.
+
+  ## Parameters
+  - github_id: The GitHub ID of the workflow run
+
+  ## Returns
+  - %WorkflowRun{} with preloaded repository if found
+  - nil if not found
+  """
+  def get_by_github_id_with_repository(github_id) when is_integer(github_id) do
+    WorkflowRun
+    |> where([wr], wr.github_id == ^github_id)
+    |> preload([:repository])
+    |> Repo.one()
+  end
+
+  def get_by_github_id_with_repository(_), do: nil
 
   @doc """
   Creates a minimal workflow run from workflow job webhook data.
