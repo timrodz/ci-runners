@@ -98,18 +98,20 @@ This document breaks down the MVP implementation into manageable tasks with clea
 **Test Coverage:** LiveView mounting, PubSub message handling, state updates
 **Completed:** DashboardLive module with comprehensive real-time functionality, PubSub subscription for workflow updates, preloaded associations for efficient data loading, responsive HTML template with status indicators, complete test coverage for mount behavior and live updates
 
-#### TASK-007: UI Components and Styling
+#### TASK-007: UI Components and Styling ✅ COMPLETED
 **Priority:** Medium | **Estimated Time:** 2-3 hours
-- [ ] Create WorkflowRunCard component displaying run name, number, status, branch
-- [ ] Create WorkflowJobItem component displaying job name, status, runner info
-- [ ] Create StatusBadge component with color-coded status indicators
-- [ ] Implement responsive TailwindCSS styling
-- [ ] Add loading states and connection status indicator
-- [ ] Add proper styling for different statuses (queued: gray, in_progress: blue, success: green, failure: red)
-- [ ] Write component tests for rendering and styling
+- [x] Create WorkflowRunCard component displaying run name, number, status, branch
+- [x] Create WorkflowJobItem component displaying job name, status, runner info
+- [x] Refactor dashboard_live.html.heex to improve readability by splitting logic into other components
+- [x] Create StatusBadge component with color-coded status indicators
+- [x] Implement responsive TailwindCSS styling
+- [x] Add loading states and connection status indicator
+- [x] Add proper styling for different statuses (queued: yellow, in_progress: blue, success: green, failure: red, cancelled: gray)
+- [x] Write component tests for rendering and styling
 
 **Dependencies:** TASK-006
-**Test Coverage:** Component rendering, status styling, responsive behavior
+**Test Coverage:** Component rendering, status styling, responsive behavior, dark mode support
+**Completed:** Created reusable UI components (StatusBadge, WorkflowRunCard, WorkflowJobItem, LoadingState, ConnectionStatus) with comprehensive styling including dark mode support, refactored dashboard to use components, implemented responsive design with mobile-first approach, comprehensive test coverage (17 tests) for all components including edge cases
 
 ### Integration and End-to-End (Depends on All Previous)
 

@@ -16,23 +16,19 @@ defmodule CiRunnersWeb.WebhookController do
         case handle_event(event_type, payload) do
           :ok ->
             Logger.info("Successfully processed #{event_type} event")
-            # Response is handled by the plug, just return the conn
             conn
 
           {:error, :unsupported_event} ->
             Logger.info("Ignored unsupported event: #{event_type}")
-            # Response is handled by the plug, just return the conn
             conn
 
           {:error, reason} ->
             Logger.error("Failed to process #{event_type} event: #{inspect(reason)}")
-            # Response is handled by the plug, just return the conn
             conn
         end
 
       {:error, :missing_event_type} ->
         Logger.warning("Missing X-GitHub-Event header")
-        # Response is handled by the plug, just return the conn
         conn
     end
   end
