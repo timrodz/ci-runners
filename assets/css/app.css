@@ -100,3 +100,16 @@
 [data-phx-root-id] { display: contents }
 
 /* This file is for your main application CSS */
+
+/* GitHub Link Styles */
+.github-link {
+  @apply hover:text-primary hover:underline focus:text-primary focus:underline transition-all;
+}
+
+.github-link-external {
+  @apply flex items-center space-x-2 hover:text-primary hover:underline focus:text-primary focus:underline transition-all;
+}
+
+.github-link-inline {
+  @apply flex items-center space-x-1 hover:text-primary hover:underline focus:text-primary focus:underline transition-all;
+}

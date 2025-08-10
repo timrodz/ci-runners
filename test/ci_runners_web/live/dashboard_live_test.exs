@@ -292,11 +292,11 @@ defmodule CiRunnersWeb.DashboardLiveTest do
 
       # Check status styling
       # Success
-      assert html =~ "bg-green-100 text-green-800"
+      assert html =~ "bg-success/20 text-success-content"
       # Failure
-      assert html =~ "bg-red-100 text-red-800"
+      assert html =~ "bg-error/20 text-error-content"
       # In progress
-      assert html =~ "bg-blue-100 text-blue-800"
+      assert html =~ "bg-info/20 text-info-content"
     end
 
     test "displays correct time formatting", %{conn: conn} do

@@ -7,6 +7,8 @@ defmodule CiRunnersWeb.DashboardLive do
 
   use CiRunnersWeb, :live_view
 
+  import CiRunnersWeb.CoreComponents
+
   alias CiRunners.WorkflowRuns
   alias CiRunners.PubSub
 
@@ -79,65 +81,15 @@ defmodule CiRunnersWeb.DashboardLive do
     {:noreply, socket}
   end
 
-  # Helper functions for rendering
-
-  defp format_status(status) do
-    case status do
-      "queued" -> "Queued"
-      "in_progress" -> "In Progress"
-      "completed" -> "Completed"
-      "waiting" -> "Waiting"
-      "requested" -> "Requested"
-      _ -> String.capitalize(status || "Unknown")
-    end
-  end
-
-  defp format_conclusion(nil), do: ""
-
-  defp format_conclusion(conclusion) do
-    case conclusion do
-      "success" -> "Success"
-      "failure" -> "Failed"
-      "cancelled" -> "Cancelled"
-      "timed_out" -> "Timed Out"
-      "action_required" -> "Action Required"
-      "neutral" -> "Neutral"
-      "skipped" -> "Skipped"
-      _ -> String.capitalize(conclusion)
-    end
-  end
-
-  defp status_class(status, conclusion) do
-    case {status, conclusion} do
-      {"completed", "success"} -> "bg-green-100 text-green-800"
-      {"completed", "failure"} -> "bg-red-100 text-red-800"
-      {"completed", "cancelled"} -> "bg-gray-100 text-gray-800"
-      {"in_progress", _} -> "bg-blue-100 text-blue-800"
-      {"queued", _} -> "bg-yellow-100 text-yellow-800"
-      {"waiting", _} -> "bg-yellow-100 text-yellow-800"
-      _ -> "bg-gray-100 text-gray-800"
-    end
-  end
-
-  defp time_ago(datetime) when is_nil(datetime), do: "—"
-
-  defp time_ago(%DateTime{} = datetime) do
-    diff = DateTime.diff(DateTime.utc_now(), datetime, :second)
-
-    cond do
-      diff < 60 -> "#{diff}s ago"
-      diff < 3600 -> "#{div(diff, 60)}m ago"
-      diff < 86400 -> "#{div(diff, 3600)}h ago"
-      true -> "#{div(diff, 86400)}d ago"
-    end
-  end
-
-  defp time_ago(_), do: "—"
-
   # Helper function for updating jobs in socket assigns
   defp update_jobs_for_run(socket, workflow_run_id) do
     jobs_for_run = WorkflowRuns.list_jobs_grouped_by_run([workflow_run_id])
     updated_jobs_by_run = Map.merge(socket.assigns.jobs_by_run, jobs_for_run)
     assign(socket, :jobs_by_run, updated_jobs_by_run)
+  end
+
+  # Helper function to check connection status
+  defp socket_connected?(socket) do
+    Phoenix.LiveView.connected?(socket)
   end
 end

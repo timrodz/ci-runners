@@ -29,7 +29,7 @@ defmodule CiRunnersWeb.CoreComponents do
   use Phoenix.Component
   use Gettext, backend: CiRunnersWeb.Gettext
 
-  alias Phoenix.LiveView.JS
+  alias Phoenix.LiveView.{JS, ColocatedHook, ColocatedJS}
 
   @doc """
   Renders flash notices.
@@ -410,25 +410,260 @@ defmodule CiRunnersWeb.CoreComponents do
 
   ## JS Commands
 
-  def show(js \\ %JS{}, selector) do
-    JS.show(js,
-      to: selector,
-      time: 300,
-      transition:
-        {"transition-all ease-out duration-300",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
-         "opacity-100 translate-y-0 sm:scale-100"}
-    )
+  @doc """
+  Renders a status badge for workflow runs and jobs.
+
+  ## Examples
+
+      <.status_badge status="in_progress" />
+      <.status_badge status="completed" conclusion="success" />
+      <.status_badge status="completed" conclusion="failure" />
+  """
+  attr :status, :string, required: true, doc: "the status of the workflow/job"
+  attr :conclusion, :string, default: nil, doc: "the conclusion when status is completed"
+  attr :class, :string, default: "", doc: "additional CSS classes"
+
+  def status_badge(assigns) do
+    ~H"""
+    <span class={[
+      "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+      status_badge_class(@status, @conclusion),
+      @class
+    ]}>
+      {status_badge_text(@status, @conclusion)}
+    </span>
+    """
   end
 
-  def hide(js \\ %JS{}, selector) do
-    JS.hide(js,
-      to: selector,
-      time: 200,
-      transition:
-        {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
-    )
+  @doc """
+  Renders a workflow run card with run details and jobs.
+
+  ## Examples
+
+      <.workflow_run_card workflow_run={run} jobs={jobs} />
+  """
+  attr :workflow_run, :any, required: true, doc: "the workflow run struct"
+  attr :jobs, :list, default: [], doc: "list of jobs for this workflow run"
+  attr :class, :string, default: "", doc: "additional CSS classes"
+
+  def workflow_run_card(assigns) do
+    ~H"""
+    <div id="workflow-run-card" class={["bg-base-200 shadow-md rounded-lg overflow-hidden", @class]}>
+      <div class="px-6 py-4 border-b border-base-300">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <%= if Ecto.assoc_loaded?(@workflow_run.repository) do %>
+              <.link
+                href={
+                  github_workflow_run_url(
+                    @workflow_run.repository.owner,
+                    @workflow_run.repository.name,
+                    @workflow_run.github_id
+                  )
+                }
+                target="_blank"
+                class="github-link-external"
+              >
+                <h3 class="text-lg font-medium text-base-content">
+                  {@workflow_run.name}
+                </h3>
+                <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4 text-base-content/60" />
+              </.link>
+            <% else %>
+              <h3 class="text-lg font-medium text-base-content">
+                {@workflow_run.name}
+              </h3>
+            <% end %>
+            <.status_badge status={@workflow_run.status} conclusion={@workflow_run.conclusion} />
+          </div>
+          <div class="text-sm text-base-content/60">
+            #{@workflow_run.run_number}
+          </div>
+        </div>
+
+        <div class="mt-2 flex items-center space-x-6 text-sm text-base-content/60">
+          <%= if Ecto.assoc_loaded?(@workflow_run.repository) do %>
+            <.link
+              href={github_repo_url(@workflow_run.repository.owner, @workflow_run.repository.name)}
+              target="_blank"
+              class="github-link"
+            >
+              <.icon name="hero-building-office" class="mr-1.5 h-4 w-4 text-base-content/50" />
+              {@workflow_run.repository.owner}/{@workflow_run.repository.name}
+            </.link>
+          <% end %>
+
+          <div class="flex items-center">
+            <.icon name="hero-clock" class="mr-1.5 h-4 w-4 text-base-content/50" />
+            <.relative_time datetime={@workflow_run.started_at} />
+            <%!-- <span>{time_ago(@job.started_at)}</span> --%>
+          </div>
+
+          <div class="flex items-center">
+            <.icon name="hero-code-bracket" class="mr-1.5 h-4 w-4 text-base-content/50" />
+            <%= if Ecto.assoc_loaded?(@workflow_run.repository) do %>
+              <.link
+                href={
+                  github_branch_url(
+                    @workflow_run.repository.owner,
+                    @workflow_run.repository.name,
+                    @workflow_run.head_branch
+                  )
+                }
+                target="_blank"
+                class="github-link"
+              >
+                {@workflow_run.head_branch}
+              </.link>
+            <% else %>
+              <span class="text-base-content">{@workflow_run.head_branch}</span>
+            <% end %>
+          </div>
+
+          <div class="flex items-center">
+            <.icon name="hero-hashtag" class="mr-1.5 h-4 w-4 text-base-content/50" />
+            <%= if Ecto.assoc_loaded?(@workflow_run.repository) do %>
+              <.link
+                href={
+                  github_commit_url(
+                    @workflow_run.repository.owner,
+                    @workflow_run.repository.name,
+                    @workflow_run.head_sha
+                  )
+                }
+                target="_blank"
+                class="github-link"
+              >
+                {String.slice(@workflow_run.head_sha, 0, 7)}
+              </.link>
+            <% else %>
+              <span class="text-base-content">{String.slice(@workflow_run.head_sha, 0, 7)}</span>
+            <% end %>
+            <.copy_button text={@workflow_run.head_sha} class="ml-2">
+              <.icon
+                name="hero-clipboard"
+                class="mr-1.5 h-4 w-4 text-base-content/50 hover:text-base-content"
+              />
+            </.copy_button>
+          </div>
+        </div>
+      </div>
+
+      <%= if @jobs != [] do %>
+        <div class="px-6 py-4">
+          <h4 class="text-sm font-medium text-base-content mb-3">Jobs</h4>
+          <div class="space-y-2">
+            <%= for job <- Enum.sort_by(@jobs, & &1.started_at, {:desc, DateTime}) do %>
+              <.workflow_job_item job={job} workflow_run={@workflow_run} />
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a workflow job item with job details.
+
+  ## Examples
+
+      <.workflow_job_item job={job} workflow_run={workflow_run} />
+  """
+  attr :job, :any, required: true, doc: "the workflow job struct"
+  attr :workflow_run, :any, required: true, doc: "the workflow run struct"
+  attr :class, :string, default: "", doc: "additional CSS classes"
+
+  def workflow_job_item(assigns) do
+    ~H"""
+    <div class={[
+      "flex items-center justify-between py-2 px-3 bg-base-200 rounded-md",
+      @class
+    ]}>
+      <div class="flex items-center space-x-3">
+        <%= if Ecto.assoc_loaded?(@workflow_run.repository) do %>
+          <.link
+            href={
+              github_job_url(
+                @workflow_run.repository.owner,
+                @workflow_run.repository.name,
+                @workflow_run.github_id,
+                @job.github_id
+              )
+            }
+            target="_blank"
+            class="github-link-inline"
+          >
+            <span class="text-sm font-medium text-base-content">{@job.name}</span>
+            <.icon name="hero-arrow-top-right-on-square" class="h-3 w-3 text-base-content/60" />
+          </.link>
+        <% else %>
+          <span class="text-sm font-medium text-base-content">{@job.name}</span>
+        <% end %>
+        <.status_badge status={@job.status} conclusion={@job.conclusion} class="text-xs" />
+      </div>
+
+      <div class="flex items-center space-x-4 text-xs text-base-content/60">
+        <%= if @job.runner_name do %>
+          <span class="flex items-center">
+            <.icon name="hero-cpu-chip" class="mr-1 h-3 w-3 text-base-content/50" />
+            {@job.runner_name}
+          </span>
+        <% end %>
+
+        <.relative_time datetime={@job.started_at} />
+        <%!-- <span>{time_ago(@job.started_at)}</span> --%>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a loading state indicator.
+
+  ## Examples
+
+      <.loading_state />
+      <.loading_state message="Loading workflows..." />
+  """
+  attr :message, :string, default: "Loading...", doc: "loading message to display"
+  attr :class, :string, default: "", doc: "additional CSS classes"
+
+  def loading_state(assigns) do
+    ~H"""
+    <div class={["flex items-center justify-center py-12", @class]}>
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p class="mt-2 text-sm text-base-content/60">{@message}</p>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a connection status indicator.
+
+  ## Examples
+
+      <.connection_status connected={true} />
+      <.connection_status connected={false} />
+  """
+  attr :connected, :boolean, default: true, doc: "whether the connection is active"
+  attr :class, :string, default: "", doc: "additional CSS classes"
+
+  def connection_status(assigns) do
+    ~H"""
+    <div class={["flex items-center space-x-2 text-xs", @class]}>
+      <div class={[
+        "w-2 h-2 rounded-full",
+        if(@connected, do: "bg-success animate-pulse", else: "bg-error")
+      ]}>
+      </div>
+      <span class="text-base-content/70">
+        {if @connected, do: "Connected", else: "Disconnected"}
+      </span>
+    </div>
+    """
   end
 
   @doc """
@@ -457,5 +692,273 @@ defmodule CiRunnersWeb.CoreComponents do
   """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+  end
+
+  @doc """
+  Renders a copy button styled like a code block that can be clicked to copy text.
+
+  ## Examples
+
+      <.copy_button text="abc123def">
+        abc123d
+      </.copy_button>
+
+      <.copy_button text={repository.commit_sha}>
+        {String.slice(repository.commit_sha, 0, 8)}
+      </.copy_button>
+
+  """
+  attr :text, :string, required: true, doc: "the text to copy to clipboard"
+  attr :class, :string, default: "", doc: "additional CSS classes for the button"
+
+  slot :inner_block, required: true, doc: "the visible content of the copy button"
+
+  def copy_button(assigns) do
+    assigns = assign_new(assigns, :class, fn -> "" end)
+
+    ~H"""
+    <button
+      type="button"
+      class={[
+        "cursor-pointer",
+        @class
+      ]}
+      phx-click={JS.dispatch("copy-to-clipboard")}
+      data-value={@text}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    <script :type={ColocatedJS}>
+      window.addEventListener("copy-to-clipboard", (event) => {
+        if ("clipboard" in navigator) {
+          const text = event.target.dataset.value;
+          navigator.clipboard.writeText(text);
+          // TODO: Send a toast notification
+        } else {
+          alert("Sorry, your browser does not support clipboard copy.");
+        }
+      });
+    </script>
+    """
+  end
+
+  @doc """
+  Renders relative time with automatic updates.
+
+  ## Examples
+
+      <.relative_time datetime={DateTime.utc_now()} />
+      <.relative_time datetime={repository.started_at} class="text-sm text-gray-500" />
+
+  """
+  attr :datetime, :any, required: true, doc: "the datetime to display relatively"
+  attr :class, :string, doc: "additional CSS classes for the time element"
+  attr :id, :string, doc: "the optional id of the time element"
+
+  def relative_time(assigns) do
+    assigns =
+      assigns
+      |> assign_new(:class, fn -> nil end)
+      |> assign_new(:id, fn -> "time-#{System.unique_integer([:positive])}" end)
+      |> assign(:formatted_time, format_relative_time(assigns.datetime))
+      |> assign(:js_timestamp, format_timestamp_for_js(assigns.datetime))
+
+    ~H"""
+    <span class={@class} id={@id} data-timestamp={@js_timestamp} phx-hook=".TimeAgo">
+      {@formatted_time}
+    </span>
+    <script :type={ColocatedHook} name=".TimeAgo">
+      export default {
+        mounted() {
+          this.updateTime();
+          this.interval = setInterval(() => this.updateTime(), 1000);
+        },
+
+        updated() {
+          this.updateTime();
+        },
+
+        destroyed() {
+          if (this.interval) {
+            clearInterval(this.interval);
+          }
+        },
+
+        updateTime() {
+          const el = this.el;
+          const timestamp = el.dataset.timestamp;
+          if (timestamp && timestamp !== "null" && timestamp !== "undefined") {
+            try {
+              const datetime = new Date(timestamp);
+              if (!isNaN(datetime.getTime())) {
+                const timeAgo = this.calculateTimeAgo(datetime);
+                el.textContent = timeAgo;
+              }
+            } catch (error) {
+              console.warn(
+                "TimeAgo hook: Invalid timestamp format:",
+                timestamp,
+                error,
+              );
+            }
+          }
+        },
+
+        calculateTimeAgo(datetime) {
+          const now = new Date();
+          const diffInSeconds = Math.floor((now - datetime) / 1000);
+
+          // Handle future dates
+          if (diffInSeconds < 0) {
+            return "in the future";
+          }
+
+          // Handle "just now" case
+          if (diffInSeconds < 5) {
+            return "just now";
+          }
+
+          // Seconds (up to 59 seconds)
+          if (diffInSeconds < 60) {
+            return `${diffInSeconds}s ago`;
+          }
+
+          // Minutes (up to 59 minutes)
+          const diffInMinutes = Math.floor(diffInSeconds / 60);
+          if (diffInMinutes < 60) {
+            return `${diffInMinutes}m ago`;
+          }
+
+          // Everything else is "a while ago"
+          return Math.floor(diffInSeconds / 86400) + "d ago";
+        },
+      }
+    </script>
+    """
+  end
+
+  # UTILITIES
+
+  def show(js \\ %JS{}, selector) do
+    JS.show(js,
+      to: selector,
+      time: 300,
+      transition:
+        {"transition-all ease-out duration-300",
+         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
+         "opacity-100 translate-y-0 sm:scale-100"}
+    )
+  end
+
+  def hide(js \\ %JS{}, selector) do
+    JS.hide(js,
+      to: selector,
+      time: 200,
+      transition:
+        {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
+         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+    )
+  end
+
+  defp status_badge_class(status, conclusion) do
+    case {status, conclusion} do
+      {"completed", "success"} ->
+        "bg-success/20 text-success-content border border-success/30"
+
+      {"completed", "failure"} ->
+        "bg-error/20 text-error-content border border-error/30"
+
+      {"completed", "cancelled"} ->
+        "bg-neutral/20 text-neutral-content border border-neutral/30"
+
+      {"completed", "timed_out"} ->
+        "bg-error/20 text-error-content border border-error/30"
+
+      {"completed", "action_required"} ->
+        "bg-warning/20 text-warning-content border border-warning/30"
+
+      {"completed", "neutral"} ->
+        "bg-info/20 text-info-content border border-info/30"
+
+      {"completed", "skipped"} ->
+        "bg-neutral/20 text-neutral-content border border-neutral/30"
+
+      {"in_progress", _} ->
+        "bg-info/20 text-info-content border border-info/30"
+
+      {"queued", _} ->
+        "bg-warning/20 text-warning-content border border-warning/30"
+
+      {"waiting", _} ->
+        "bg-warning/20 text-warning-content border border-warning/30"
+
+      {"requested", _} ->
+        "bg-neutral/20 text-neutral-content border border-neutral/30"
+
+      _ ->
+        "bg-neutral/20 text-neutral-content border border-neutral/30"
+    end
+  end
+
+  defp status_badge_text(status, conclusion) do
+    case {status, conclusion} do
+      {"completed", "success"} -> "Success"
+      {"completed", "failure"} -> "Failed"
+      {"completed", "cancelled"} -> "Cancelled"
+      {"completed", "timed_out"} -> "Timed Out"
+      {"completed", "action_required"} -> "Action Required"
+      {"completed", "neutral"} -> "Neutral"
+      {"completed", "skipped"} -> "Skipped"
+      {"completed", nil} -> "Completed"
+      {"in_progress", _} -> "In Progress"
+      {"queued", _} -> "Queued"
+      {"waiting", _} -> "Waiting"
+      {"requested", _} -> "Requested"
+      _ -> String.capitalize(status || "Unknown")
+    end
+  end
+
+  # GitHub URL helpers
+  defp github_repo_url(owner, name), do: "https://github.com/#{owner}/#{name}"
+
+  defp github_workflow_run_url(owner, name, run_github_id),
+    do: "https://github.com/#{owner}/#{name}/actions/runs/#{run_github_id}"
+
+  defp github_job_url(owner, name, run_github_id, job_github_id),
+    do: "https://github.com/#{owner}/#{name}/actions/runs/#{run_github_id}/job/#{job_github_id}"
+
+  defp github_branch_url(owner, name, branch),
+    do: "#{github_repo_url(owner, name)}/tree/#{branch}"
+
+  defp github_commit_url(owner, name, commit_sha),
+    do: "#{github_repo_url(owner, name)}/commit/#{commit_sha}"
+
+  # Dates
+  defp format_relative_time(datetime) when is_nil(datetime), do: "—"
+
+  defp format_relative_time(datetime) do
+    now = DateTime.utc_now()
+    diff = DateTime.diff(now, datetime, :second)
+
+    cond do
+      # Handle future dates
+      diff < 0 -> "in the future"
+      # Handle "just now" case
+      diff < 5 -> "just now"
+      # Seconds (up to 59 seconds)
+      diff < 60 -> "#{diff}s ago"
+      # Minutes (up to 59 minutes)
+      diff < 3600 -> "#{div(diff, 60)}m ago"
+      # Hours (up to 23 hours)
+      diff < 86400 -> "#{div(diff, 3600)}h ago"
+      # Days
+      true -> "#{div(diff, 86400)}d ago"
+    end
+  end
+
+  defp format_timestamp_for_js(datetime) when is_nil(datetime), do: nil
+
+  defp format_timestamp_for_js(datetime) do
+    DateTime.to_iso8601(datetime)
   end
 end
